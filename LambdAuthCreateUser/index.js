@@ -10,6 +10,8 @@ var config = require('./config.json');
 var dynamodb = new AWS.DynamoDB();
 var ses = new AWS.SES();
 
+const wrapHandler = require('./handler_error_wrapper');
+
 function computeHash(password, salt, fn) {
 	// Bytesize
 	var len = 128;
@@ -93,9 +95,12 @@ function sendVerificationEmail(email, token, fn) {
 	}, fn);
 }
 
-exports.handler = function(event, context) {
+var handler = function (event, context) {
 	var email = event.email;
 	var clearPassword = event.password;
+
+    console.log('Event email:', util.inspect(event, false, null));
+    console.log('Event context:', util.inspect(context, false, null));
 
 	computeHash(clearPassword, function(err, salt, hash) {
 		if (err) {
@@ -126,3 +131,5 @@ exports.handler = function(event, context) {
 		}
 	});
 }
+
+exports.handler = wrapHandler();
